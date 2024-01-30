@@ -80,11 +80,13 @@ src_configure() {
 	fi
 	my_src_configure() {
 		case ${MULTIBUILD_VARIANT} in
-			qt5) local QMAKE=eqmake5 ;;
-			qt6) local QMAKE=eqmake6 ;;
+			qt5)
+				qsci_run_in "${BUILD_DIR}"/src eqmake5;
+				use designer && qsci_run_in "${BUILD_DIR}"/designer eqmake5;;
+			qt6)
+				qsci_run_in "${BUILD_DIR}"/src eqmake6;
+				use designer && qsci_run_in "${BUILD_DIR}"/designer eqmake6;;
 		esac
-		qsci_run_in "${BUILD_DIR}"/src "${QMAKE}"
-		use designer && qsci_run_in "${BUILD_DIR}"/designer "${QMAKE}"
 	}
 
 	multibuild_foreach_variant my_src_configure
