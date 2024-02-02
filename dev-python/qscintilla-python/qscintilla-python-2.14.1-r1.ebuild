@@ -4,7 +4,7 @@
 EAPI=8
 
 PYTHON_COMPAT=( python3_{9..12} )
-inherit multibuild python-r1
+inherit multibuild python-r1 qmake-utils out-of-source-utils
 
 DESCRIPTION="Python bindings for QScintilla"
 HOMEPAGE="https://www.riverbankcomputing.com/software/qscintilla/ https://pypi.org/project/QScintilla/"
@@ -60,26 +60,45 @@ pkg_setup() {
 src_configure() {
 	my_src_configure() {
 		case ${MULTIBUILD_VARIANT} in
-			qt5) local QMAKE=qmake5 ;;
-			qt6) local QMAKE=qmake6 ;;
-		esac
-		configuration() {
-			local myconf=(
-				sip-build
-				--verbose
-				--build-dir="${BUILD_DIR}"
-				--scripts-dir="$(python_get_scriptdir)"
-				--qmake="/usr/bin/${QMAKE}"
-				--no-make
-				$(usev debug '--debug --qml-debug --tracing')
-			)
-			echo "${myconf[@]}"
-			"${myconf[@]}" || die
+			qt5)
+				configuration() {
+					local myconf=(
+						sip-build
+						--verbose
+						--build-dir="${BUILD_DIR}"
+						--scripts-dir="$(python_get_scriptdir)"
+						--qmake="$(qt5_get_bindir)"/qmake
+						--no-make
+						$(usev debug '--debug --qml-debug --tracing')
+					)
+					echo "${myconf[@]}"
+					"${myconf[@]}" || die
 
-			run_in_build_dir ${QMAKE} -recursive ${MY_PN}.pro
-		}
-		mv pyproject{-${MULTIBUILD_VARIANT},}.toml || die
-		python_foreach_impl configuration
+					run_in_build_dir qmake5 -recursive ${MY_PN}.pro
+				}
+				mv pyproject{-${MULTIBUILD_VARIANT},}.toml || die
+				python_foreach_impl configuration
+				;;
+			qt6)
+				configuration() {
+					local myconf=(
+						sip-build
+						--verbose
+						--build-dir="${BUILD_DIR}"
+						--scripts-dir="$(python_get_scriptdir)"
+						--qmake="$(qt6_get_bindir)"/qmake
+						--no-make
+						$(usev debug '--debug --qml-debug --tracing')
+					)
+					echo "${myconf[@]}"
+					"${myconf[@]}" || die
+
+					run_in_build_dir qmake6 -recursive ${MY_PN}.pro
+				}
+				mv pyproject{-${MULTIBUILD_VARIANT},}.toml || die
+				python_foreach_impl configuration
+				;;
+		esac
 	}
 	multibuild_foreach_variant my_src_configure
 }
